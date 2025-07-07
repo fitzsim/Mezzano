@@ -2,6 +2,8 @@
 
 (in-package :mezzano.network.ethernet)
 
+(defconstant +ethernet-header-length+ 14)
+(defconstant +ethernet-header-offset-type+ 12)
 (defconstant +ethertype-ipv4+ #x0800)
 (defconstant +ethertype-arp+  #x0806)
 (defconstant +ethertype-ipv6+ #x86DD)
@@ -32,7 +34,8 @@
   nil)
 
 (defun receive-ethernet-packet (interface packet)
-  (ethernet-receive (ub16ref/be packet 12) interface packet 14 (length packet)))
+  (ethernet-receive (ub16ref/be packet +ethernet-header-offset-type+) interface
+                    packet +ethernet-header-length+ (length packet)))
 
 (defun ethernet-loopback (interface packet)
   ;; This is a bit hacky... (less than it was before!)
@@ -46,13 +49,14 @@
      net::*network-serial-queue*)))
 
 (defun transmit-ethernet-packet (interface destination ethertype packet)
-  (let* ((ethernet-header (make-array 14 :element-type '(unsigned-byte 8)))
+  (let* ((ethernet-header (make-array +ethernet-header-length+
+                                      :element-type '(unsigned-byte 8)))
          (packet (cons ethernet-header packet))
          (source (ethernet-mac interface)))
     (dotimes (i 6)
       (setf (aref ethernet-header i) (aref destination i)
             (aref ethernet-header (+ i 6)) (aref source i)))
-    (setf (ub16ref/be ethernet-header 12) ethertype)
+    (setf (ub16ref/be ethernet-header +ethernet-header-offset-type+) ethertype)
     (cond ((equalp destination source)
            ;; Loopback, don't hit the wire.
            (ethernet-loopback interface packet))

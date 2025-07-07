@@ -25,6 +25,8 @@
            #:transmit-packet
            #:transmit-ethernet-packet
            #:ethernet-receive
+           #:+ethernet-header-length+
+           #:+ethernet-header-offset-type+
            #:+ethertype-ipv4+
            #:+ethertype-arp+
            #:+ethertype-ipv6+))
